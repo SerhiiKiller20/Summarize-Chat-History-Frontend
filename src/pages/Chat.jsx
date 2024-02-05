@@ -16,11 +16,30 @@ const Chat = () => {
     }
   };
 
+  const endOfMessagesRef = useRef(null); // Ref to track the last message
+
+  // Function to scroll to the last message
+  const scrollToBottom = () => {
+    if (endOfMessagesRef.current) {
+      endOfMessagesRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  // Effect to scroll to the bottom whenever messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
+
+
   const sendMessage = (msg) => {
     const formdata = new FormData();
     formdata.append("msg", msg);
     let answer = "";
     setMessages([...messages, { content: msg, role: "user" }]);
+    
+    
+
     sendRequest("user-question", {
       body: formdata
     })
@@ -45,6 +64,7 @@ const Chat = () => {
               {content:msg, role:"user"},
               {content:answer, role:"assistant"}
             ])
+            // chat_ref.current.scrollTop = chat_ref.current.scrollHeight;
             return read();
           });
         }
@@ -75,12 +95,19 @@ const Chat = () => {
     sendRequest("create-new-thread").then((response) => response.json());
   }, []);
 
+  // useEffect(() => {
+  //   chat_ref.current.scrollTop = 1000;
+  //     if (chat_ref.current) {
+  //       chat_ref.current.scrollTop = chat_ref.current.scrollHeight;
+  //     }
+  // }, [messages]);
+
   return (
     <>
       <Box
-        maxHeight="90vh"
+        // maxHeight="90vh"
         sx={{
-          // overflowY: ["visible", "visible", "scroll"],
+          overflowY: "auto",
           "&::-webkit-scrollbar": {
             width: "18px",
             background: "#2949AB40",
@@ -89,6 +116,7 @@ const Chat = () => {
             background: "rgb(41, 73, 171)",
           },
         }}
+        
       >
         <Box
           px={[1, 1, 2]}
@@ -100,8 +128,22 @@ const Chat = () => {
           pb={14}
           minHeight="80vh"
         >
-          {messages.map((item) => {
-            return <SingleChatBox key={item.id} {...item} />;
+          {/* {messages.map((item, index) => {
+            const isLastMessage = index === messages.length - 1;
+            return <SingleChatBox
+              key={item.id}
+              {...item} 
+              ref={isLastMessage ? messagesEndRef : null}
+            />;
+          })} */}
+          {messages.map((item, index) => {
+            // Check if this message is the last one in the array
+            const isLastMessage = index === messages.length - 1;
+            return (
+              <div key={item.id} ref={isLastMessage ? endOfMessagesRef : null}>
+                <SingleChatBox {...item} />
+              </div>
+            );
           })}
         </Box>
       </Box>
